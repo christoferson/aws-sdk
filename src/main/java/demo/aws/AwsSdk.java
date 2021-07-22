@@ -13,8 +13,7 @@ public class AwsSdk {
 		
 		AwsSdkS3 s3 = new AwsSdkS3(credentials);
 		s3.buckets();
-		
-		s3.objects("obsidian-study-site");
+
 	}
 
 }
