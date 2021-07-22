@@ -1,13 +1,16 @@
 package demo.aws.modules;
 
+import java.net.URL;
 import java.util.List;
 
+import com.amazonaws.HttpMethod;
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.Bucket;
+import com.amazonaws.services.s3.model.GeneratePresignedUrlRequest;
 import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 
@@ -40,6 +43,23 @@ public class AwsSdkS3 {
 			System.out.println(String.format("%s %s %s", os.getKey(), os.getLastModified(), os.getStorageClass()));
 		}
 		
+	}
+	
+	public void presign(String bucketname, String objectname, HttpMethod method) {
+		
+		// Set the pre-signed URL to expire after one hour.
+        java.util.Date expiration = new java.util.Date();
+        long expTimeMillis = expiration.getTime();
+        expTimeMillis += 1000 * 60; //expTimeMillis += 1000 * 60 * 60;
+        expiration.setTime(expTimeMillis);
+
+        // Generate the pre-signed URL.
+        System.out.println("Generating pre-signed URL.");
+        GeneratePresignedUrlRequest generatePresignedUrlRequest = new GeneratePresignedUrlRequest(bucketname, objectname)
+                .withMethod(method)
+                .withExpiration(expiration);
+        URL url = s3client.generatePresignedUrl(generatePresignedUrlRequest);
+        System.out.println(url);
 	}
 	
 }
