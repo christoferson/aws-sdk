@@ -62,4 +62,10 @@ public class AwsSdkS3 {
         System.out.println(url);
 	}
 	
+	public void url(String bucketname, String objectname) {
+
+		URL url = s3client.getUrl(bucketname, objectname);
+		System.out.println(url);
+	}
+	
 }
