@@ -68,4 +68,10 @@ public class AwsSdkS3 {
 		System.out.println(url);
 	}
 	
+	public void exists(String bucketname) {
+
+		boolean exists = s3client.doesBucketExistV2(bucketname);
+		System.out.println(exists);
+	}
+	
 }
