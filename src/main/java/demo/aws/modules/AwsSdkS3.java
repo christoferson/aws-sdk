@@ -9,6 +9,7 @@ import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
+import com.amazonaws.services.s3.model.AmazonS3Exception;
 import com.amazonaws.services.s3.model.Bucket;
 import com.amazonaws.services.s3.model.CannedAccessControlList;
 import com.amazonaws.services.s3.model.CreateBucketRequest;
@@ -97,6 +98,16 @@ public class AwsSdkS3 {
 					.withRestrictPublicBuckets(true));
 		SetPublicAccessBlockResult r2r = s3client.setPublicAccessBlock(r2);
 		System.out.println(r2r);
+	}
+	
+	public void delete(String bucketname) {
+
+		try {
+			s3client.deleteBucket(bucketname);
+			System.out.println(bucketname + " deleted.");
+		} catch (AmazonS3Exception e) {
+			System.err.print(e);
+		}
 	}
 	
 }
