@@ -10,9 +10,15 @@ import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.Bucket;
+import com.amazonaws.services.s3.model.CannedAccessControlList;
+import com.amazonaws.services.s3.model.CreateBucketRequest;
 import com.amazonaws.services.s3.model.GeneratePresignedUrlRequest;
 import com.amazonaws.services.s3.model.ObjectListing;
+import com.amazonaws.services.s3.model.PublicAccessBlockConfiguration;
+import com.amazonaws.services.s3.model.Region;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
+import com.amazonaws.services.s3.model.SetPublicAccessBlockRequest;
+import com.amazonaws.services.s3.model.SetPublicAccessBlockResult;
 
 public class AwsSdkS3 {
 	
@@ -72,6 +78,25 @@ public class AwsSdkS3 {
 
 		boolean exists = s3client.doesBucketExistV2(bucketname);
 		System.out.println(exists);
+	}
+	
+	public void create(String bucketname, Region region) {
+
+		CreateBucketRequest request = new CreateBucketRequest(bucketname, region).withCannedAcl(CannedAccessControlList.Private);
+		
+		Bucket bucket = s3client.createBucket(request);
+		System.out.println(bucket);
+		
+		// Block all public access
+		SetPublicAccessBlockRequest r2 = new SetPublicAccessBlockRequest();
+		r2.withBucketName(bucketname).withPublicAccessBlockConfiguration(
+				new PublicAccessBlockConfiguration()
+					.withBlockPublicAcls(true)
+					.withBlockPublicPolicy(true)
+					.withIgnorePublicAcls(true)
+					.withRestrictPublicBuckets(true));
+		SetPublicAccessBlockResult r2r = s3client.setPublicAccessBlock(r2);
+		System.out.println(r2r);
 	}
 	
 }
