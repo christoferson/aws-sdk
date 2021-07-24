@@ -1,5 +1,6 @@
 package demo.aws.modules;
 
+import java.io.File;
 import java.net.URL;
 import java.util.List;
 
@@ -16,6 +17,8 @@ import com.amazonaws.services.s3.model.CreateBucketRequest;
 import com.amazonaws.services.s3.model.GeneratePresignedUrlRequest;
 import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.s3.model.PublicAccessBlockConfiguration;
+import com.amazonaws.services.s3.model.PutObjectRequest;
+import com.amazonaws.services.s3.model.PutObjectResult;
 import com.amazonaws.services.s3.model.Region;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.amazonaws.services.s3.model.SetPublicAccessBlockRequest;
@@ -105,6 +108,17 @@ public class AwsSdkS3 {
 		try {
 			s3client.deleteBucket(bucketname);
 			System.out.println(bucketname + " deleted.");
+		} catch (AmazonS3Exception e) {
+			System.err.print(e);
+		}
+	}
+	
+	public void put(String bucketname, String objectname, File file) {
+
+		try {
+			PutObjectRequest request = new PutObjectRequest(bucketname, objectname, file);
+			PutObjectResult result = s3client.putObject(request);
+			System.out.println(result);
 		} catch (AmazonS3Exception e) {
 			System.err.print(e);
 		}
