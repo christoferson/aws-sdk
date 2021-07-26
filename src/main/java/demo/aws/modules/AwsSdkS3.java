@@ -2,6 +2,7 @@ package demo.aws.modules;
 
 import java.io.File;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
 
 import com.amazonaws.HttpMethod;
@@ -21,8 +22,13 @@ import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.services.s3.model.PutObjectResult;
 import com.amazonaws.services.s3.model.Region;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
+import com.amazonaws.services.s3.model.SetBucketOwnershipControlsRequest;
+import com.amazonaws.services.s3.model.SetBucketOwnershipControlsResult;
 import com.amazonaws.services.s3.model.SetPublicAccessBlockRequest;
 import com.amazonaws.services.s3.model.SetPublicAccessBlockResult;
+import com.amazonaws.services.s3.model.ownership.ObjectOwnership;
+import com.amazonaws.services.s3.model.ownership.OwnershipControls;
+import com.amazonaws.services.s3.model.ownership.OwnershipControlsRule;
 
 public class AwsSdkS3 {
 	
@@ -118,6 +124,20 @@ public class AwsSdkS3 {
 		try {
 			PutObjectRequest request = new PutObjectRequest(bucketname, objectname, file);
 			PutObjectResult result = s3client.putObject(request);
+			System.out.println(result);
+		} catch (AmazonS3Exception e) {
+			System.err.print(e);
+		}
+	}
+	
+	public void setBucketOwnershipControls(String bucketname, ObjectOwnership ownership) {
+
+		try {
+			List<OwnershipControlsRule> rules = new ArrayList<>();
+			rules.add(new OwnershipControlsRule().withOwnership(ownership));
+			SetBucketOwnershipControlsRequest request = new SetBucketOwnershipControlsRequest();
+			request.withBucketName(bucketname).withOwnershipControls(new OwnershipControls().withRules(rules));
+			SetBucketOwnershipControlsResult result = s3client.setBucketOwnershipControls(request);
 			System.out.println(result);
 		} catch (AmazonS3Exception e) {
 			System.err.print(e);
