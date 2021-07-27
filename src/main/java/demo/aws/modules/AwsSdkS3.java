@@ -123,6 +123,7 @@ public class AwsSdkS3 {
 
 		try {
 			PutObjectRequest request = new PutObjectRequest(bucketname, objectname, file);
+			request.withCannedAcl(CannedAccessControlList.BucketOwnerFullControl);
 			PutObjectResult result = s3client.putObject(request);
 			System.out.println(result);
 		} catch (AmazonS3Exception e) {
