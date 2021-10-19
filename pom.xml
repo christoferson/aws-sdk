@@ -14,6 +14,10 @@
 			<groupId>com.amazonaws</groupId>
 			<artifactId>aws-java-sdk-glacier</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>com.amazonaws</groupId>
+			<artifactId>aws-java-sdk-kms</artifactId>
+		</dependency>
 		<!-- 
 		<dependency>
             <groupId>jakarta.xml.bind</groupId>
