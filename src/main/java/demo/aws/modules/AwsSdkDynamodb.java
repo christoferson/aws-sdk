@@ -14,15 +14,19 @@ public class AwsSdkDynamodb {
 	private AmazonDynamoDB client;
 	
 	public AwsSdkDynamodb(AWSCredentials credentials) {
+		this(credentials, Regions.US_EAST_1);
+	}
+
+	public AwsSdkDynamodb(AWSCredentials credentials, Regions region) {
 		
 		this.client = AmazonDynamoDBClientBuilder
 				  .standard()
 				  .withCredentials(new AWSStaticCredentialsProvider(credentials))
-				  .withRegion(Regions.US_EAST_1)
+				  .withRegion(region)
 				  .build();
 	}
 	
-	public void list() {
+	public void tableList() {
 		
 		DynamoDB dynamoDB = new DynamoDB(client);
 
