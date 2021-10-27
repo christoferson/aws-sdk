@@ -8,10 +8,13 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
 import com.amazonaws.services.dynamodbv2.document.DynamoDB;
 import com.amazonaws.services.dynamodbv2.document.TableCollection;
 import com.amazonaws.services.dynamodbv2.model.ListTablesResult;
+import com.amazonaws.services.dynamodbv2.model.TableDescription;
 
 public class AwsSdkDynamodb {
 
 	private AmazonDynamoDB client;
+	
+	private DynamoDB dynamoDB;
 	
 	public AwsSdkDynamodb(AWSCredentials credentials) {
 		this(credentials, Regions.US_EAST_1);
@@ -24,11 +27,11 @@ public class AwsSdkDynamodb {
 				  .withCredentials(new AWSStaticCredentialsProvider(credentials))
 				  .withRegion(region)
 				  .build();
+		
+		dynamoDB = new DynamoDB(client);
 	}
 	
 	public void tableList() {
-		
-		DynamoDB dynamoDB = new DynamoDB(client);
 
 		TableCollection<ListTablesResult> tables = dynamoDB.listTables();
 
@@ -38,5 +41,18 @@ public class AwsSdkDynamodb {
         }
  
 	}
+	
+	public void tableDescribe(String tableName) {
+
+        System.out.println("Describing " + tableName);
+
+        TableDescription tableDescription = dynamoDB.getTable(tableName).describe();
+        System.out.format(
+            "Name: %s:\n" + "Status: %s \n" + "Provisioned Throughput (read capacity units/sec): %d \n"
+                + "Provisioned Throughput (write capacity units/sec): %d \n",
+            tableDescription.getTableName(), tableDescription.getTableStatus(),
+            tableDescription.getProvisionedThroughput().getReadCapacityUnits(),
+            tableDescription.getProvisionedThroughput().getWriteCapacityUnits());
+    }
 		
 }
