@@ -84,16 +84,18 @@ public class AwsSdkDynamodb {
         Table table = dynamoDB.getTable(tableName);
         try {
 
-            Item item = new Item().withPrimaryKey("Region", keyRegionId, "PlayerID", keyPlayerId).
-            		withString("Level", "1");
-            table.putItem(item, "attribute_not_exists(Region)", null, null);
+            Item item = new Item()
+            		.withPrimaryKey("Region", keyRegionId, "PlayerID", keyPlayerId)
+            		.withString("Level", "1");
+            table.putItem(item, "attribute_not_exists(PlayerID)", null, null);
 
-            //attribute_not_exists 
+            System.out.println("Registered: " + item);
 
         } catch (Exception e) {
             System.err.println("Create items failed.");
             System.err.println(e.getMessage());
         }
+
     }
-		
+
 }
