@@ -6,7 +6,10 @@ import com.amazonaws.regions.Regions;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
 import com.amazonaws.services.dynamodbv2.document.DynamoDB;
+import com.amazonaws.services.dynamodbv2.document.Item;
+import com.amazonaws.services.dynamodbv2.document.Table;
 import com.amazonaws.services.dynamodbv2.document.TableCollection;
+import com.amazonaws.services.dynamodbv2.document.spec.GetItemSpec;
 import com.amazonaws.services.dynamodbv2.model.ListTablesResult;
 import com.amazonaws.services.dynamodbv2.model.TableDescription;
 
@@ -53,6 +56,44 @@ public class AwsSdkDynamodb {
             tableDescription.getTableName(), tableDescription.getTableStatus(),
             tableDescription.getProvisionedThroughput().getReadCapacityUnits(),
             tableDescription.getProvisionedThroughput().getWriteCapacityUnits());
+    }
+	
+	
+	public void itemRetrieve(String tableName, String keyRegionId, String keyPlayerId) {
+        Table table = dynamoDB.getTable(tableName);
+
+        try {
+        	GetItemSpec i = new GetItemSpec();
+        	i.withPrimaryKey("Region", keyRegionId, "PlayerID", keyPlayerId);
+            Item item = table.getItem("Region", keyRegionId, "PlayerID", keyPlayerId, "PlayerID", null);
+            
+            System.out.println("Printing item after retrieving it....");
+            //System.out.println(item.toJSONPretty());
+            System.out.println(item);
+
+        }
+        catch (Exception e) {
+            System.err.println("GetItem failed.");
+            System.err.println(e.getMessage());
+        }
+
+    }
+	
+    public void itemRegister(String tableName, String keyRegionId, String keyPlayerId) {
+
+        Table table = dynamoDB.getTable(tableName);
+        try {
+
+            Item item = new Item().withPrimaryKey("Region", keyRegionId, "PlayerID", keyPlayerId).
+            		withString("Level", "1");
+            table.putItem(item, "attribute_not_exists(Region)", null, null);
+
+            //attribute_not_exists 
+
+        } catch (Exception e) {
+            System.err.println("Create items failed.");
+            System.err.println(e.getMessage());
+        }
     }
 		
 }
