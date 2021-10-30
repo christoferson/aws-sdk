@@ -5,12 +5,19 @@ import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
+import com.amazonaws.services.dynamodbv2.document.DeleteItemOutcome;
 import com.amazonaws.services.dynamodbv2.document.DynamoDB;
 import com.amazonaws.services.dynamodbv2.document.Item;
 import com.amazonaws.services.dynamodbv2.document.Table;
 import com.amazonaws.services.dynamodbv2.document.TableCollection;
+import com.amazonaws.services.dynamodbv2.document.UpdateItemOutcome;
+import com.amazonaws.services.dynamodbv2.document.spec.DeleteItemSpec;
 import com.amazonaws.services.dynamodbv2.document.spec.GetItemSpec;
+import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec;
+import com.amazonaws.services.dynamodbv2.document.utils.NameMap;
+import com.amazonaws.services.dynamodbv2.document.utils.ValueMap;
 import com.amazonaws.services.dynamodbv2.model.ListTablesResult;
+import com.amazonaws.services.dynamodbv2.model.ReturnValue;
 import com.amazonaws.services.dynamodbv2.model.TableDescription;
 
 public class AwsSdkDynamodb {
@@ -65,7 +72,8 @@ public class AwsSdkDynamodb {
         try {
         	GetItemSpec i = new GetItemSpec();
         	i.withPrimaryKey("Region", keyRegionId, "PlayerID", keyPlayerId);
-            Item item = table.getItem("Region", keyRegionId, "PlayerID", keyPlayerId, "PlayerID", null);
+            //Item item = table.getItem("Region", keyRegionId, "PlayerID", keyPlayerId, "PlayerID", null);
+        	Item item = table.getItem("Region", keyRegionId, "PlayerID", keyPlayerId, null, null);
             
             System.out.println("Printing item after retrieving it....");
             //System.out.println(item.toJSONPretty());
@@ -87,6 +95,7 @@ public class AwsSdkDynamodb {
             Item item = new Item()
             		.withPrimaryKey("Region", keyRegionId, "PlayerID", keyPlayerId)
             		.withString("Level", "1");
+            // Without the condition, existing record will be overwritten
             table.putItem(item, "attribute_not_exists(PlayerID)", null, null);
 
             System.out.println("Registered: " + item);
@@ -97,5 +106,36 @@ public class AwsSdkDynamodb {
         }
 
     }
+    
+    // What if attribute already exists // How to remove attribute
+    public void itemUpdateAddNewAttribute(String tableName, String keyRegionId, String keyPlayerId) {
+
+        Table table = dynamoDB.getTable(tableName);
+
+        try {
+
+            UpdateItemSpec updateItemSpec = new UpdateItemSpec()
+            	.withPrimaryKey("Region", keyRegionId, "PlayerID", keyPlayerId)
+                .withUpdateExpression("set #na = :val1")
+                .withNameMap(new NameMap().with("#na", "MaxHitPoints"))
+                .withValueMap(new ValueMap().withString(":val1", "150"))
+                .withReturnValues(ReturnValue.ALL_NEW);
+
+            UpdateItemOutcome outcome = table.updateItem(updateItemSpec);
+
+            // Check the response.
+            System.out.println("Printing item after adding new attribute...");
+            System.out.println(outcome.getItem().toJSONPretty());
+
+        }
+        catch (Exception e) {
+            System.err.println("Failed to add new attribute in " + tableName);
+            System.err.println(e.getMessage());
+        }
+
+    }
+    
+ 
+    
 
 }
