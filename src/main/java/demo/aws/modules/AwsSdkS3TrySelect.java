@@ -23,6 +23,7 @@ import com.amazonaws.services.s3.model.SelectObjectContentEvent;
 import com.amazonaws.services.s3.model.SelectObjectContentEventVisitor;
 import com.amazonaws.services.s3.model.SelectObjectContentRequest;
 import com.amazonaws.services.s3.model.SelectObjectContentResult;
+import com.amazonaws.services.s3.model.Stats;
 
 public class AwsSdkS3TrySelect {
 	
@@ -52,9 +53,8 @@ public class AwsSdkS3TrySelect {
                     new SelectObjectContentEventVisitor() {
                         @Override
                         public void visit(SelectObjectContentEvent.StatsEvent event) {
-                            System.out.println(
-                                    "Received Stats, Bytes Scanned: " + event.getDetails().getBytesScanned()
-                                            +  " Bytes Processed: " + event.getDetails().getBytesProcessed());
+                            Stats stats = event.getDetails();
+							System.out.println("Received Stats, Bytes Scanned: " + stats.getBytesScanned() +  " Bytes Processed: " + stats.getBytesProcessed());
                         }
 
                         /*
