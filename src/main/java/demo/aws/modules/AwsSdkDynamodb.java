@@ -135,7 +135,32 @@ public class AwsSdkDynamodb {
 
     }
     
- 
+    
+    public void itemDelete(String tableName, String keyRegionId, String keyPlayerId) {
+
+        Table table = dynamoDB.getTable(tableName);
+
+        try {
+
+            DeleteItemSpec deleteItemSpec = new DeleteItemSpec()
+            	.withPrimaryKey("Region", keyRegionId, "PlayerID", keyPlayerId)
+                //.withConditionExpression("#ip = :val")
+                //.withNameMap(new NameMap().with("#ip", "InPublication"))
+                //.withValueMap(new ValueMap().withBoolean(":val", false))
+                .withReturnValues(ReturnValue.ALL_OLD);
+
+            DeleteItemOutcome outcome = table.deleteItem(deleteItemSpec);
+
+            // Check the response.
+            System.out.println("Printing item that was deleted...");
+            System.out.println(outcome.getItem().toJSONPretty());
+
+        }
+        catch (Exception e) {
+            System.err.println("Error deleting item in " + tableName);
+            System.err.println(e.getMessage());
+        }
+    }
     
 
 }
