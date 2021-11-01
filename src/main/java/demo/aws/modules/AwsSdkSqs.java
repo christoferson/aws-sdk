@@ -29,5 +29,10 @@ public class AwsSdkSqs {
 		}
 
 	}
-	
+
+	public void queueGetUrl(String name) {
+		
+		String queue_url = client.getQueueUrl(name).getQueueUrl();
+		System.out.println(String.format("Queue:%s URL:%s", name, queue_url));
+	}
 }
