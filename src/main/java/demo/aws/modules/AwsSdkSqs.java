@@ -53,5 +53,13 @@ public class AwsSdkSqs {
 		System.out.println(String.format("Queue:%s Received Message: %s", queueUrl, messages));
 	}
 	
-
+	public void messageSend(String queueUrl) {
+		
+		SendMessageRequest request = new SendMessageRequest()
+		        .withQueueUrl(queueUrl)
+		        .withMessageBody("hello")
+		        .withDelaySeconds(5);
+		client.sendMessage(request);
+		
+	}
 }
