@@ -51,6 +51,30 @@ public class AwsSdkSqs {
 		List<Message> messages = client.receiveMessage(request).getMessages();
 		
 		System.out.println(String.format("Queue:%s Received Message: %s", queueUrl, messages));
+		/* Delete Messages after Receipt
+		for (Message m : messages) {
+		    client.deleteMessage(queueUrl, m.getReceiptHandle());
+		}
+		*/
+		
+	}
+	
+	public void messageReceiveLongPolling(String queueUrl) {
+		
+		System.out.println(String.format("Queue:%s Receiving Message...", queueUrl));
+		
+		ReceiveMessageRequest request = new ReceiveMessageRequest()
+				.withQueueUrl(queueUrl)
+				.withWaitTimeSeconds(20);
+		List<Message> messages = client.receiveMessage(request).getMessages();
+		
+		System.out.println(String.format("Queue:%s Received Message: %s", queueUrl, messages));
+		/* Delete Messages after Receipt
+		for (Message m : messages) {
+		    client.deleteMessage(queueUrl, m.getReceiptHandle());
+		}
+		*/
+		
 	}
 	
 	public void messageSend(String queueUrl) {
