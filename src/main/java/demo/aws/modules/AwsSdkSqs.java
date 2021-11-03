@@ -16,6 +16,7 @@ import com.amazonaws.services.sqs.model.Message;
 import com.amazonaws.services.sqs.model.ReceiveMessageRequest;
 import com.amazonaws.services.sqs.model.SendMessageRequest;
 import com.amazonaws.services.sqs.model.SendMessageResult;
+import com.amazonaws.services.sqs.model.SetQueueAttributesRequest;
 
 public class AwsSdkSqs {
 	
@@ -30,7 +31,17 @@ public class AwsSdkSqs {
 				  .build();
 	}
 
-
+	public void queueCreate(String queueName) {
+		
+		try {
+			CreateQueueResult result = client.createQueue(queueName);
+			System.out.println(String.format("Queue:%s Created Queue. URL:%s", queueName, result.getQueueUrl()));
+		} catch (AmazonSQSException e) {
+		    if (!e.getErrorCode().equals("QueueAlreadyExists")) {
+		        throw e;
+		    }
+		}
+	}
 
 	public void queueList() {
 		
@@ -60,6 +71,27 @@ public class AwsSdkSqs {
 		
 	}
 	
+	public void queueSetDeadLetterQueue(String queueName, String deadLetterQueueName) {
+		
+		String deadLetterQueueUrl = client.getQueueUrl(deadLetterQueueName).getQueueUrl();
+
+		GetQueueAttributesResult queue_attrs = client.getQueueAttributes(
+				new GetQueueAttributesRequest(deadLetterQueueUrl).withAttributeNames("QueueArn"));
+		
+		String deadLetterQueueArn = queue_attrs.getAttributes().get("QueueArn");
+		
+		//Set dead letter queue with redrive policy on source queue.
+		String queueUrl = client.getQueueUrl(queueName).getQueueUrl();
+		
+		SetQueueAttributesRequest request = new SetQueueAttributesRequest()
+		.withQueueUrl(queueUrl)
+		.addAttributesEntry("RedrivePolicy",
+		       "{\"maxReceiveCount\":\"5\", \"deadLetterTargetArn\":\""
+		       + deadLetterQueueArn + "\"}");
+		
+		client.setQueueAttributes(request);
+
+	}
 	
 	public void messageReceive(String queueUrl) {
 		
