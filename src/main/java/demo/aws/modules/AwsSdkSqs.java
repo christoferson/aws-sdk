@@ -7,10 +7,12 @@ import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.sqs.AmazonSQS;
 import com.amazonaws.services.sqs.AmazonSQSClientBuilder;
+import com.amazonaws.services.sqs.model.DeleteMessageResult;
 import com.amazonaws.services.sqs.model.ListQueuesResult;
 import com.amazonaws.services.sqs.model.Message;
 import com.amazonaws.services.sqs.model.ReceiveMessageRequest;
 import com.amazonaws.services.sqs.model.SendMessageRequest;
+import com.amazonaws.services.sqs.model.SendMessageResult;
 
 public class AwsSdkSqs {
 	
@@ -46,16 +48,21 @@ public class AwsSdkSqs {
 		System.out.println(String.format("Queue:%s Receiving Message...", queueUrl));
 		
 		ReceiveMessageRequest request = new ReceiveMessageRequest()
-				.withQueueUrl(queueUrl);
+				.withQueueUrl(queueUrl)
+				.withMaxNumberOfMessages(10);
 				//.withWaitTimeSeconds(5)
 		List<Message> messages = client.receiveMessage(request).getMessages();
-		
-		System.out.println(String.format("Queue:%s Received Message: %s", queueUrl, messages));
-		/* Delete Messages after Receipt
 		for (Message m : messages) {
-		    client.deleteMessage(queueUrl, m.getReceiptHandle());
+			System.out.println(String.format("Queue:%s Received Message: %s", queueUrl, m));
 		}
-		*/
+
+		for (Message m : messages) {
+		    client.changeMessageVisibility(queueUrl, m.getReceiptHandle(), 0);
+		}
+		
+		//for (Message m : messages) {
+		//    client.deleteMessage(queueUrl, m.getReceiptHandle());
+		//}
 		
 	}
 	
@@ -65,15 +72,17 @@ public class AwsSdkSqs {
 		
 		ReceiveMessageRequest request = new ReceiveMessageRequest()
 				.withQueueUrl(queueUrl)
-				.withWaitTimeSeconds(20);
+				.withMaxNumberOfMessages(10)
+				.withWaitTimeSeconds(10);
 		List<Message> messages = client.receiveMessage(request).getMessages();
 		
-		System.out.println(String.format("Queue:%s Received Message: %s", queueUrl, messages));
-		/* Delete Messages after Receipt
 		for (Message m : messages) {
-		    client.deleteMessage(queueUrl, m.getReceiptHandle());
+			System.out.println(String.format("Queue:%s Received Message: %s", queueUrl, m));
 		}
-		*/
+		// Delete Messages after Receipt
+		for (Message m : messages) {
+			client.deleteMessage(queueUrl, m.getReceiptHandle());
+		}
 		
 	}
 	
@@ -82,8 +91,11 @@ public class AwsSdkSqs {
 		SendMessageRequest request = new SendMessageRequest()
 		        .withQueueUrl(queueUrl)
 		        .withMessageBody("hello")
-		        .withDelaySeconds(5);
-		client.sendMessage(request);
+		        //.withDelaySeconds(5)
+		        ;
+		SendMessageResult result = client.sendMessage(request);
+		
+		System.out.println(String.format("Queue:%s Set Message: %s", queueUrl, result.getMessageId()));
 		
 	}
 }
