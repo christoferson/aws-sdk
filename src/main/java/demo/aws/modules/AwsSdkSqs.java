@@ -7,7 +7,10 @@ import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.sqs.AmazonSQS;
 import com.amazonaws.services.sqs.AmazonSQSClientBuilder;
-import com.amazonaws.services.sqs.model.DeleteMessageResult;
+import com.amazonaws.services.sqs.model.AmazonSQSException;
+import com.amazonaws.services.sqs.model.CreateQueueResult;
+import com.amazonaws.services.sqs.model.GetQueueAttributesRequest;
+import com.amazonaws.services.sqs.model.GetQueueAttributesResult;
 import com.amazonaws.services.sqs.model.ListQueuesResult;
 import com.amazonaws.services.sqs.model.Message;
 import com.amazonaws.services.sqs.model.ReceiveMessageRequest;
@@ -27,6 +30,8 @@ public class AwsSdkSqs {
 				  .build();
 	}
 
+
+
 	public void queueList() {
 		
 		ListQueuesResult result = client.listQueues();
@@ -41,7 +46,20 @@ public class AwsSdkSqs {
 		
 		String queue_url = client.getQueueUrl(name).getQueueUrl();
 		System.out.println(String.format("Queue:%s URL:%s", name, queue_url));
+
 	}
+	
+	public void queueGetArn(String queueUrl) {
+		
+		GetQueueAttributesResult queue_attrs = client.getQueueAttributes(
+		        new GetQueueAttributesRequest(queueUrl)
+		            .withAttributeNames("QueueArn"));
+
+		String arn = queue_attrs.getAttributes().get("QueueArn");
+		System.out.println(String.format("Queue:%s ARN:%s", queueUrl, arn));
+		
+	}
+	
 	
 	public void messageReceive(String queueUrl) {
 		
@@ -98,4 +116,7 @@ public class AwsSdkSqs {
 		System.out.println(String.format("Queue:%s Set Message: %s", queueUrl, result.getMessageId()));
 		
 	}
+	
+	
+	
 }
