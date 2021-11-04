@@ -93,7 +93,13 @@ public class AwsSdkSqs {
 
 	}
 	
+	public void queueDelete(String queueUrl) {
+		
+		client.deleteQueue(queueUrl);
 
+		System.out.println(String.format("Queue:%s Deleted.", queueUrl));
+		
+	}
 	
 	////
 	
