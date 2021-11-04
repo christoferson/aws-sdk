@@ -75,19 +75,17 @@ public class AwsSdkSqs {
 		
 		String deadLetterQueueUrl = client.getQueueUrl(deadLetterQueueName).getQueueUrl();
 
-		GetQueueAttributesResult queue_attrs = client.getQueueAttributes(
-				new GetQueueAttributesRequest(deadLetterQueueUrl).withAttributeNames("QueueArn"));
+		GetQueueAttributesRequest getQueueArnRequest = new GetQueueAttributesRequest(deadLetterQueueUrl).withAttributeNames("QueueArn");
+		GetQueueAttributesResult getQueueArnResult = client.getQueueAttributes(getQueueArnRequest);
 		
-		String deadLetterQueueArn = queue_attrs.getAttributes().get("QueueArn");
+		String deadLetterQueueArn = getQueueArnResult.getAttributes().get("QueueArn");
 		
 		//Set dead letter queue with redrive policy on source queue.
 		String queueUrl = client.getQueueUrl(queueName).getQueueUrl();
 		
 		SetQueueAttributesRequest request = new SetQueueAttributesRequest()
 		.withQueueUrl(queueUrl)
-		.addAttributesEntry("RedrivePolicy",
-		       "{\"maxReceiveCount\":\"5\", \"deadLetterTargetArn\":\""
-		       + deadLetterQueueArn + "\"}");
+		.addAttributesEntry("RedrivePolicy", "{\"maxReceiveCount\":\"5\", \"deadLetterTargetArn\":\"" + deadLetterQueueArn + "\"}");
 		
 		client.setQueueAttributes(request);
 
