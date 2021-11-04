@@ -53,11 +53,11 @@ public class AwsSdkSqs {
 
 	}
 
-	public void queueGetUrl(String name) {
+	public String queueGetUrl(String name) {
 		
-		String queue_url = client.getQueueUrl(name).getQueueUrl();
-		System.out.println(String.format("Queue:%s URL:%s", name, queue_url));
-
+		String queueUrl = client.getQueueUrl(name).getQueueUrl();
+		System.out.println(String.format("Queue:%s URL:%s", name, queueUrl));
+		return queueUrl;
 	}
 	
 	public void queueGetArn(String queueUrl) {
@@ -85,13 +85,19 @@ public class AwsSdkSqs {
 		
 		SetQueueAttributesRequest request = new SetQueueAttributesRequest()
 		.withQueueUrl(queueUrl)
-		.addAttributesEntry("RedrivePolicy", "{\"maxReceiveCount\":\"5\", \"deadLetterTargetArn\":\"" + deadLetterQueueArn + "\"}");
+		.addAttributesEntry("RedrivePolicy", "{\"maxReceiveCount\":\"2\", \"deadLetterTargetArn\":\"" + deadLetterQueueArn + "\"}");
 		
 		client.setQueueAttributes(request);
+		
+		System.out.println(String.format("Queue:%s DeadLetterQueue=5s", queueName, deadLetterQueueName));
 
 	}
 	
-	public void messageReceive(String queueUrl) {
+
+	
+	////
+	
+	public void messageReceive(String queueUrl, int visibilitySeconds) {
 		
 		System.out.println(String.format("Queue:%s Receiving Message...", queueUrl));
 		
@@ -105,7 +111,7 @@ public class AwsSdkSqs {
 		}
 
 		for (Message m : messages) {
-		    client.changeMessageVisibility(queueUrl, m.getReceiptHandle(), 0);
+		    client.changeMessageVisibility(queueUrl, m.getReceiptHandle(), visibilitySeconds);
 		}
 		
 		//for (Message m : messages) {
@@ -134,11 +140,11 @@ public class AwsSdkSqs {
 		
 	}
 	
-	public void messageSend(String queueUrl) {
+	public void messageSend(String queueUrl, String data) {
 		
 		SendMessageRequest request = new SendMessageRequest()
 		        .withQueueUrl(queueUrl)
-		        .withMessageBody("hello")
+		        .withMessageBody(data)
 		        //.withDelaySeconds(5)
 		        ;
 		SendMessageResult result = client.sendMessage(request);
