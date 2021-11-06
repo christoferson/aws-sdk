@@ -25,10 +25,6 @@ public class AwsSdkDynamodb {
 	private AmazonDynamoDB client;
 	
 	private DynamoDB dynamoDB;
-	
-	public AwsSdkDynamodb(AWSCredentials credentials) {
-		this(credentials, Regions.US_EAST_1);
-	}
 
 	public AwsSdkDynamodb(AWSCredentials credentials, Regions region) {
 		
