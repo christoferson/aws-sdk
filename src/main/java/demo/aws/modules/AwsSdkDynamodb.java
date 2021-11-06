@@ -1,5 +1,8 @@
 package demo.aws.modules;
 
+import java.util.List;
+import java.util.Map;
+
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.regions.Regions;
@@ -8,14 +11,20 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
 import com.amazonaws.services.dynamodbv2.document.DeleteItemOutcome;
 import com.amazonaws.services.dynamodbv2.document.DynamoDB;
 import com.amazonaws.services.dynamodbv2.document.Item;
+import com.amazonaws.services.dynamodbv2.document.ItemCollection;
+import com.amazonaws.services.dynamodbv2.document.QueryOutcome;
 import com.amazonaws.services.dynamodbv2.document.Table;
 import com.amazonaws.services.dynamodbv2.document.TableCollection;
 import com.amazonaws.services.dynamodbv2.document.UpdateItemOutcome;
 import com.amazonaws.services.dynamodbv2.document.spec.DeleteItemSpec;
 import com.amazonaws.services.dynamodbv2.document.spec.GetItemSpec;
+import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec;
 import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec;
 import com.amazonaws.services.dynamodbv2.document.utils.NameMap;
 import com.amazonaws.services.dynamodbv2.document.utils.ValueMap;
+import com.amazonaws.services.dynamodbv2.model.AttributeValue;
+import com.amazonaws.services.dynamodbv2.model.ExecuteStatementRequest;
+import com.amazonaws.services.dynamodbv2.model.ExecuteStatementResult;
 import com.amazonaws.services.dynamodbv2.model.ListTablesResult;
 import com.amazonaws.services.dynamodbv2.model.ReturnValue;
 import com.amazonaws.services.dynamodbv2.model.TableDescription;
@@ -156,6 +165,21 @@ public class AwsSdkDynamodb {
             System.err.println("Error deleting item in " + tableName);
             System.err.println(e.getMessage());
         }
+    }
+
+    public void executePartiQL() {
+        String partiQLString = "select * from Player";
+        ExecuteStatementRequest executeStatementRequest = new ExecuteStatementRequest().withStatement(partiQLString);
+        ExecuteStatementResult executeStatementResponse = client.executeStatement(executeStatementRequest);
+        List<Map<String, AttributeValue>> items = executeStatementResponse.getItems();
+		int count = 0;
+		for (var item : items) {
+			System.out.println(item);
+			count++;
+		}
+		if (count == 0) {
+			System.out.println("No Matches");
+		}
     }
     
 
