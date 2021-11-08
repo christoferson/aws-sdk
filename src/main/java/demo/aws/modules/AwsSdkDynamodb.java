@@ -166,7 +166,30 @@ public class AwsSdkDynamodb {
             System.err.println(e.getMessage());
         }
     }
+    
+    public void itemQuery(String tableName) {
 
+		Table table = dynamoDB.getTable(tableName);
+
+		QuerySpec spec = new QuerySpec()
+				.withKeyConditionExpression("Region = :v_id")
+				.withValueMap(new ValueMap().withString(":v_id", "Conan"));
+				//.withFilterExpression("Region = :v_region and PlayerID = :v_id")
+				//.withValueMap(new ValueMap().withString(":v_id", "Conan").withString("v_region", "US"));
+
+		ItemCollection<QueryOutcome> items = table.query(spec);
+
+		int count = 0;
+		for (Item item : items) {
+			System.out.println(item);
+			count++;
+		}
+		if (count == 0) {
+			System.out.println("No Matches");
+		}
+		
+    }
+    
     public void executePartiQL() {
         String partiQLString = "select * from Player";
         ExecuteStatementRequest executeStatementRequest = new ExecuteStatementRequest().withStatement(partiQLString);
