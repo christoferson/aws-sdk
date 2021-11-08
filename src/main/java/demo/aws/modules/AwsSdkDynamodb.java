@@ -190,11 +190,11 @@ public class AwsSdkDynamodb {
 		
     }
     
-    public void executePartiQL() {
-        String partiQLString = "select * from Player";
-        ExecuteStatementRequest executeStatementRequest = new ExecuteStatementRequest().withStatement(partiQLString);
-        ExecuteStatementResult executeStatementResponse = client.executeStatement(executeStatementRequest);
-        List<Map<String, AttributeValue>> items = executeStatementResponse.getItems();
+    public void executePartiQL(String partiQLString) {
+
+        ExecuteStatementRequest request = new ExecuteStatementRequest().withStatement(partiQLString);
+        ExecuteStatementResult result = client.executeStatement(request);
+        List<Map<String, AttributeValue>> items = result.getItems();
 		int count = 0;
 		for (var item : items) {
 			System.out.println(item);
