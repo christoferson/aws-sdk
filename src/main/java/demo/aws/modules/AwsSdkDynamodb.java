@@ -27,6 +27,8 @@ import com.amazonaws.services.dynamodbv2.model.ExecuteStatementRequest;
 import com.amazonaws.services.dynamodbv2.model.ExecuteStatementResult;
 import com.amazonaws.services.dynamodbv2.model.ListTablesResult;
 import com.amazonaws.services.dynamodbv2.model.ReturnValue;
+import com.amazonaws.services.dynamodbv2.model.ScanRequest;
+import com.amazonaws.services.dynamodbv2.model.ScanResult;
 import com.amazonaws.services.dynamodbv2.model.TableDescription;
 
 public class AwsSdkDynamodb {
@@ -203,6 +205,17 @@ public class AwsSdkDynamodb {
 		if (count == 0) {
 			System.out.println("No Matches");
 		}
+    }
+    
+    public void tableScan(String tableName) {
+    	System.out.println("Scan Table");
+    	ScanRequest scanRequest = new ScanRequest()
+    	    .withTableName(tableName);
+
+    	ScanResult result = client.scan(scanRequest);
+    	for (Map<String, AttributeValue> item : result.getItems()){
+    		System.out.println(item);
+    	}
     }
     
 
