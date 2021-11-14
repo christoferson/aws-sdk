@@ -22,10 +22,13 @@ import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec;
 import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec;
 import com.amazonaws.services.dynamodbv2.document.utils.NameMap;
 import com.amazonaws.services.dynamodbv2.document.utils.ValueMap;
+import com.amazonaws.services.dynamodbv2.model.AttributeDefinition;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
+import com.amazonaws.services.dynamodbv2.model.DescribeTableRequest;
 import com.amazonaws.services.dynamodbv2.model.ExecuteStatementRequest;
 import com.amazonaws.services.dynamodbv2.model.ExecuteStatementResult;
 import com.amazonaws.services.dynamodbv2.model.ListTablesResult;
+import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughputDescription;
 import com.amazonaws.services.dynamodbv2.model.ReturnValue;
 import com.amazonaws.services.dynamodbv2.model.ScanRequest;
 import com.amazonaws.services.dynamodbv2.model.ScanResult;
@@ -216,6 +219,35 @@ public class AwsSdkDynamodb {
     	for (Map<String, AttributeValue> item : result.getItems()){
     		System.out.println(item);
     	}
+    }
+    
+    public void describeDymamoDBTable(String tableName) {
+
+		DescribeTableRequest request = new DescribeTableRequest().withTableName(tableName);
+
+		TableDescription tableInfo = client.describeTable(request).getTable();
+
+		if (tableInfo != null) {
+			System.out.format("Table name  : %s\n", tableInfo.getTableName());
+			System.out.format("Table ARN   : %s\n", tableInfo.getTableArn());
+			System.out.format("Status      : %s\n", tableInfo.getTableStatus());
+			System.out.format("Item count  : %d\n", tableInfo.getItemCount().longValue());
+			System.out.format("Size (bytes): %d\n", tableInfo.getTableSizeBytes().longValue());
+
+			ProvisionedThroughputDescription throughputInfo = tableInfo.getProvisionedThroughput();
+			System.out.println("Throughput");
+			System.out.format("  Read Capacity : %d\n", throughputInfo.getReadCapacityUnits().longValue());
+			System.out.format("  Write Capacity: %d\n", throughputInfo.getWriteCapacityUnits().longValue());
+
+			List<AttributeDefinition> attributes = tableInfo.getAttributeDefinitions();
+			System.out.println("Attributes");
+
+			for (AttributeDefinition a : attributes) {
+				System.out.format("  %s (%s)\n", a.getAttributeName(), a.getAttributeType());
+			}
+		}
+
+        System.out.println("\nDone!");
     }
     
 
