@@ -26,6 +26,10 @@
 			<groupId>com.amazonaws</groupId>
 			<artifactId>aws-java-sdk-sqs</artifactId>
 		</dependency>		
+		<dependency>
+			<groupId>com.amazonaws</groupId>
+			<artifactId>aws-java-sdk-lambda</artifactId>
+		</dependency>
 		<!-- 
 		<dependency>
             <groupId>jakarta.xml.bind</groupId>
