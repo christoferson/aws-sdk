@@ -26,13 +26,13 @@ public class AwsSdkLambda {
 	
 	public void list() {
 
-        ListFunctionsResult functionResult = null;
+        ListFunctionsResult result = null;
 
         try {
 
-            functionResult = client.listFunctions();
+            result = client.listFunctions();
 
-            List<FunctionConfiguration> list = functionResult.getFunctions();
+            List<FunctionConfiguration> list = result.getFunctions();
 
             for (FunctionConfiguration config : list) {
                 System.out.println("The function name is " + config.getFunctionName());
