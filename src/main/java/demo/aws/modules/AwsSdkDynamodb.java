@@ -3,9 +3,11 @@ package demo.aws.modules;
 import java.util.List;
 import java.util.Map;
 
+import com.amazonaws.ClientConfiguration;
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.regions.Regions;
+import com.amazonaws.retry.PredefinedRetryPolicies;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
 import com.amazonaws.services.dynamodbv2.document.DeleteItemOutcome;
@@ -46,9 +48,21 @@ public class AwsSdkDynamodb {
 				  .standard()
 				  .withCredentials(new AWSStaticCredentialsProvider(credentials))
 				  .withRegion(region)
+				  .withClientConfiguration(createDynamoDBClientConfiguration())
 				  .build();
 		
 		dynamoDB = new DynamoDB(client);
+	}
+	
+	
+	private static ClientConfiguration createDynamoDBClientConfiguration() {
+		ClientConfiguration clientConfiguration = new ClientConfiguration()
+				.withConnectionTimeout(300)
+				.withClientExecutionTimeout(30)
+				.withRequestTimeout(15).withSocketTimeout(15)
+				.withRetryPolicy(PredefinedRetryPolicies.getDynamoDBDefaultRetryPolicyWithCustomMaxRetries(3));
+
+		return clientConfiguration;
 	}
 	
 	public void tableList() {
