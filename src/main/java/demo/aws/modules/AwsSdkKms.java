@@ -1,7 +1,20 @@
 package demo.aws.modules;
 
+import java.nio.charset.StandardCharsets;
+import java.util.Collections;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
+import com.amazonaws.encryptionsdk.AwsCrypto;
+import com.amazonaws.encryptionsdk.CryptoMaterialsManager;
+import com.amazonaws.encryptionsdk.MasterKeyProvider;
+import com.amazonaws.encryptionsdk.caching.CachingCryptoMaterialsManager;
+import com.amazonaws.encryptionsdk.caching.CryptoMaterialsCache;
+import com.amazonaws.encryptionsdk.caching.LocalCryptoMaterialsCache;
+import com.amazonaws.encryptionsdk.kms.KmsMasterKey;
+import com.amazonaws.encryptionsdk.kms.KmsMasterKeyProvider;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.kms.AWSKMS;
 import com.amazonaws.services.kms.AWSKMSClientBuilder;
@@ -46,5 +59,47 @@ public class AwsSdkKms {
 			System.out.println(key.getAliasName());
 		}		
 	}
+	
+
+    /*
+     * Security thresholds
+     *   Max entry age is required.
+     *   Max messages (and max bytes) per data key are optional
+     */
+    private static final int MAX_ENTRY_MSGS = 100;
+
+    public static byte[] encryptWithCaching(String kmsCmkArn, int maxEntryAge, int cacheCapacity, AWSCredentials credentials) {
+        // Plaintext data to be encrypted
+        byte[] myData = "My plaintext data".getBytes(StandardCharsets.UTF_8);
+
+        // Encryption context
+        // Most encrypted data should have an associated encryption context
+        // to protect integrity. This sample uses placeholder values.
+        // For more information see:
+        // blogs.aws.amazon.com/security/post/Tx2LZ6WBJJANTNW/How-to-Protect-the-Integrity-of-Your-Encrypted-Data-by-Using-AWS-Key-Management
+        final Map<String, String> encryptionContext = Collections.singletonMap("purpose", "test");
+
+        // Create a master key provider
+        MasterKeyProvider<KmsMasterKey> keyProvider = KmsMasterKeyProvider.builder()
+        		.withCredentials(credentials)
+        		.buildStrict(kmsCmkArn);
+
+        // Create a cache
+        CryptoMaterialsCache cache = new LocalCryptoMaterialsCache(cacheCapacity);
+
+        // Create a caching CMM
+        CryptoMaterialsManager cachingCmm =
+                CachingCryptoMaterialsManager.newBuilder().withMasterKeyProvider(keyProvider)
+                        .withCache(cache)
+                        .withMaxAge(maxEntryAge, TimeUnit.SECONDS)
+                        .withMessageUseLimit(MAX_ENTRY_MSGS)
+                        
+                        .build();
+
+        // When the call to encryptData specifies a caching CMM,
+        // the encryption operation uses the data key cache
+        final AwsCrypto encryptionSdk = AwsCrypto.standard();
+        return encryptionSdk.encryptData(cachingCmm, myData, encryptionContext).getResult();
+    }
 	
 }
