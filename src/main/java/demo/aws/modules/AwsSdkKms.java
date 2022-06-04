@@ -27,6 +27,10 @@ public class AwsSdkKms {
 
 	private AWSKMS client;
 	
+	private AWSCredentials credentials;
+	
+	private CryptoMaterialsCache cache;
+	
 	public AwsSdkKms(AWSCredentials credentials) {
 		
 		this.client = AWSKMSClientBuilder
@@ -34,6 +38,14 @@ public class AwsSdkKms {
 				  .withCredentials(new AWSStaticCredentialsProvider(credentials))
 				  .withRegion(Regions.US_EAST_1)
 				  .build();
+	
+		this.credentials = credentials;
+
+        // Create a cache
+        this.cache = new LocalCryptoMaterialsCache(20);
+
+
+        
 	}
 	
 	public void list() {
@@ -68,9 +80,10 @@ public class AwsSdkKms {
      */
     private static final int MAX_ENTRY_MSGS = 100;
 
-    public static byte[] encryptWithCaching(String kmsCmkArn, int maxEntryAge, int cacheCapacity, AWSCredentials credentials) {
+    public byte[] encryptWithCaching(String kmsCmkArn, String data) {
         // Plaintext data to be encrypted
-        byte[] myData = "My plaintext data".getBytes(StandardCharsets.UTF_8);
+        byte[] myData = data.getBytes(StandardCharsets.UTF_8);
+
 
         // Encryption context
         // Most encrypted data should have an associated encryption context
@@ -84,21 +97,19 @@ public class AwsSdkKms {
         		.withCredentials(credentials)
         		.buildStrict(kmsCmkArn);
 
-        // Create a cache
-        CryptoMaterialsCache cache = new LocalCryptoMaterialsCache(cacheCapacity);
-
         // Create a caching CMM
         CryptoMaterialsManager cachingCmm =
-                CachingCryptoMaterialsManager.newBuilder().withMasterKeyProvider(keyProvider)
+                CachingCryptoMaterialsManager.newBuilder()
+                		.withMasterKeyProvider(keyProvider)
                         .withCache(cache)
-                        .withMaxAge(maxEntryAge, TimeUnit.SECONDS)
+                        .withMaxAge(300, TimeUnit.SECONDS)
                         .withMessageUseLimit(MAX_ENTRY_MSGS)
-                        
                         .build();
 
         // When the call to encryptData specifies a caching CMM,
         // the encryption operation uses the data key cache
         final AwsCrypto encryptionSdk = AwsCrypto.standard();
+        
         return encryptionSdk.encryptData(cachingCmm, myData, encryptionContext).getResult();
     }
 	
