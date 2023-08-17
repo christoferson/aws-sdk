@@ -3,6 +3,7 @@ package demo.aws.modules;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -19,6 +20,9 @@ import com.amazonaws.encryptionsdk.caching.LocalCryptoMaterialsCache;
 import com.amazonaws.encryptionsdk.kms.KmsMasterKey;
 import com.amazonaws.encryptionsdk.kms.KmsMasterKeyProvider;
 import com.amazonaws.regions.Regions;
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
+import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import com.amazonaws.services.kms.AWSKMS;
 import com.amazonaws.services.kms.AWSKMSClient;
 import com.amazonaws.services.kms.AWSKMSClientBuilder;
@@ -184,6 +188,78 @@ public class AwsSdkKms {
 		} catch (InvalidCiphertextException ex) {
 			ex.printStackTrace();
 		}
+	}
+	
+	////
+	
+	private static final String ADDRESS = "Address";
+	private static final String EMAIL = "EmailAddress";
+	private static final String TABLE = "EcDemoAddresses";
+	final static AWSKMS kms = AWSKMSClient.builder().build();
+	final static AmazonDynamoDB ddb = AmazonDynamoDBClient.builder().build();
+
+	public static void demoDynamoDBAEAD(final String[] args) {
+		// Alice stores her address
+		saveAddress("alice@example.com", "Alice Lovelace, 123 Anystreet Rd., Anytown, USA");
+		// Mallory stores her address
+		saveAddress("mallory@example.com", "Mallory Evesdotir, 321 Evilstreed Ave., Despair, USA");
+
+		// Output saved addresses
+		System.out.println("Alice's Address: " + getAddress("alice@example.com"));
+		System.out.println("Mallory's Address: " + getAddress("mallory@example.com"));
+
+		// Mallory tampers with the database by swapping the encrypted addresses.
+		// Note that this doesn't require modifying the ciphertext at all.
+		// First, retrieve the records from DynamoDB
+		final Map<String, AttributeValue> mallorysRecord = ddb
+				.getItem(TABLE, Collections.singletonMap(EMAIL, new AttributeValue().withS("mallory@example.com")))
+				.getItem();
+		final Map<String, AttributeValue> alicesRecord = ddb
+				.getItem(TABLE, Collections.singletonMap(EMAIL, new AttributeValue().withS("alice@example.com")))
+				.getItem();
+
+		// Second, extract the encrypted addresses
+		final ByteBuffer mallorysEncryptedAddress = mallorysRecord.get(ADDRESS).getB();
+		final ByteBuffer alicesEncryptedAddress = alicesRecord.get(ADDRESS).getB();
+
+		// Third, swap the encrypted addresses
+		mallorysRecord.put(ADDRESS, new AttributeValue().withB(alicesEncryptedAddress));
+		alicesRecord.put(ADDRESS, new AttributeValue().withB(mallorysEncryptedAddress));
+
+		// Finally, store them back in DynamoDB
+		ddb.putItem(TABLE, mallorysRecord);
+		ddb.putItem(TABLE, alicesRecord);
+
+		// Now, when Alice tries to use her address (say to get something shipped to
+		// her)
+		// it goes to Mallory instead.
+		System.out.println("Alice's Address: " + getAddress("alice@example.com"));
+		// Likewise, if Mallory tries to look up her address, she can view Alice's
+		// instead
+		System.out.println("Mallory's Address: " + getAddress("mallory@example.com"));
+	}
+	
+	// DO NOT USE: No Encryption Context
+
+	private static void saveAddress(final String email, final String address) {
+		final EncryptRequest enc = new EncryptRequest();
+		enc.setKeyId("alias/EcDemo");
+		enc.setPlaintext(ByteBuffer.wrap(address.getBytes(StandardCharsets.UTF_8)));
+		final ByteBuffer ciphertext = kms.encrypt(enc).getCiphertextBlob();
+
+		final Map<String, AttributeValue> item = new HashMap<>();
+		item.put(EMAIL, new AttributeValue().withS(email));
+		item.put(ADDRESS, new AttributeValue().withB(ciphertext));
+		ddb.putItem(TABLE, item);
+	}
+
+	private static String getAddress(final String email) {
+		final Map<String, AttributeValue> item = ddb
+				.getItem(TABLE, Collections.singletonMap(EMAIL, new AttributeValue().withS(email))).getItem();
+		final DecryptRequest dec = new DecryptRequest();
+		dec.setCiphertextBlob(item.get(ADDRESS).getB());
+		final ByteBuffer plaintext = kms.decrypt(dec).getPlaintext();
+		return new String(plaintext.array(), StandardCharsets.UTF_8);
 	}
 
 }
