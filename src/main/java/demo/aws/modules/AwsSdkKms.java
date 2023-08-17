@@ -240,7 +240,7 @@ public class AwsSdkKms {
 	}
 	
 	// DO NOT USE: No Encryption Context
-
+	/*
 	private static void saveAddress(final String email, final String address) {
 		final EncryptRequest enc = new EncryptRequest();
 		enc.setKeyId("alias/EcDemo");
@@ -258,6 +258,32 @@ public class AwsSdkKms {
 				.getItem(TABLE, Collections.singletonMap(EMAIL, new AttributeValue().withS(email))).getItem();
 		final DecryptRequest dec = new DecryptRequest();
 		dec.setCiphertextBlob(item.get(ADDRESS).getB());
+		final ByteBuffer plaintext = kms.decrypt(dec).getPlaintext();
+		return new String(plaintext.array(), StandardCharsets.UTF_8);
+	}
+	*/
+	
+	// Safe:: Uses setEncryptionContext using EMAIL
+	
+	private static void saveAddress(final String email, final String address) {
+		final EncryptRequest enc = new EncryptRequest();
+		enc.setKeyId("alias/EcDemo");
+		enc.setPlaintext(ByteBuffer.wrap(address.getBytes(StandardCharsets.UTF_8)));
+		enc.setEncryptionContext(Collections.singletonMap(EMAIL, email));
+		final ByteBuffer ciphertext = kms.encrypt(enc).getCiphertextBlob();
+
+		final Map<String, AttributeValue> item = new HashMap<>();
+		item.put(EMAIL, new AttributeValue().withS(email));
+		item.put(ADDRESS, new AttributeValue().withB(ciphertext));
+		ddb.putItem(TABLE, item);
+	}
+
+	private static String getAddress(final String email) {
+		final Map<String, AttributeValue> item = ddb
+				.getItem(TABLE, Collections.singletonMap(EMAIL, new AttributeValue().withS(email))).getItem();
+		final DecryptRequest dec = new DecryptRequest();
+		dec.setCiphertextBlob(item.get(ADDRESS).getB());
+		dec.setEncryptionContext(Collections.singletonMap(EMAIL, email));
 		final ByteBuffer plaintext = kms.decrypt(dec).getPlaintext();
 		return new String(plaintext.array(), StandardCharsets.UTF_8);
 	}
