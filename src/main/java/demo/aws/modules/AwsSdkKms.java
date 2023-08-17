@@ -1,6 +1,7 @@
 package demo.aws.modules;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -8,7 +9,9 @@ import java.util.concurrent.TimeUnit;
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.encryptionsdk.AwsCrypto;
+import com.amazonaws.encryptionsdk.CommitmentPolicy;
 import com.amazonaws.encryptionsdk.CryptoMaterialsManager;
+import com.amazonaws.encryptionsdk.CryptoResult;
 import com.amazonaws.encryptionsdk.MasterKeyProvider;
 import com.amazonaws.encryptionsdk.caching.CachingCryptoMaterialsManager;
 import com.amazonaws.encryptionsdk.caching.CryptoMaterialsCache;
@@ -112,5 +115,33 @@ public class AwsSdkKms {
         
         return encryptionSdk.encryptData(cachingCmm, myData, encryptionContext).getResult();
     }
+    
+    public byte[] decrypt(final String keyArn, final byte[] ciphertext) {
+        // 1. Instantiate the SDK
+        // This builds the AwsCrypto client with the RequireEncryptRequireDecrypt commitment policy,
+        // which enforces that this client only encrypts using committing algorithm suites and enforces
+        // that this client will only decrypt encrypted messages that were created with a committing algorithm suite.
+        // This is the default commitment policy if you build the client with `AwsCrypto.builder().build()`
+        // or `AwsCrypto.standard()`.
+        final AwsCrypto crypto = AwsCrypto.builder()
+                .withCommitmentPolicy(CommitmentPolicy.RequireEncryptRequireDecrypt)
+                .build();
+
+        // 2. Instantiate an AWS KMS master key provider in strict mode using buildStrict().
+        // In strict mode, the AWS KMS master key provider encrypts and decrypts only by using the key
+        // indicated by keyArn.
+        // To encrypt and decrypt with this master key provider, use an AWS KMS key ARN to identify the CMKs.
+        // In strict mode, the decrypt operation requires a key ARN.
+        final KmsMasterKeyProvider keyProvider = KmsMasterKeyProvider.builder()
+        		.withCredentials(credentials)        		
+        		.buildStrict(keyArn);
+
+
+        // 5. Decrypt the data
+        final CryptoResult<byte[], KmsMasterKey> decryptResult = crypto.decryptData(keyProvider, ciphertext);
+
+        return decryptResult.getResult();
+
+    }    
 	
 }
