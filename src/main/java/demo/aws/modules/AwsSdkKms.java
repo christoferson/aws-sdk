@@ -1,7 +1,7 @@
 package demo.aws.modules;
 
+import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -20,7 +20,11 @@ import com.amazonaws.encryptionsdk.kms.KmsMasterKey;
 import com.amazonaws.encryptionsdk.kms.KmsMasterKeyProvider;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.kms.AWSKMS;
+import com.amazonaws.services.kms.AWSKMSClient;
 import com.amazonaws.services.kms.AWSKMSClientBuilder;
+import com.amazonaws.services.kms.model.DecryptRequest;
+import com.amazonaws.services.kms.model.EncryptRequest;
+import com.amazonaws.services.kms.model.InvalidCiphertextException;
 import com.amazonaws.services.kms.model.ListAliasesRequest;
 import com.amazonaws.services.kms.model.ListAliasesResult;
 import com.amazonaws.services.kms.model.ListKeysRequest;
@@ -143,5 +147,43 @@ public class AwsSdkKms {
         return decryptResult.getResult();
 
     }    
-	
+    
+    
+    //
+
+	public static void demoAEADInvalidCiphertextException() {
+		AWSKMS kms = AWSKMSClient.builder().build();
+
+		String plaintext = "My very secret message";
+		byte[] plaintextBytes = plaintext.getBytes(StandardCharsets.UTF_8);
+		System.out.println("Plaintext: " + plaintext);
+
+		// Encrypt the data
+		EncryptRequest encReq = new EncryptRequest();
+		encReq.setKeyId("alias/EcDemo");
+		encReq.setPlaintext(ByteBuffer.wrap(plaintextBytes));
+		ByteBuffer ciphertext = kms.encrypt(encReq).getCiphertextBlob();
+
+		// Decrypt the data
+		DecryptRequest decReq1 = new DecryptRequest();
+		decReq1.setCiphertextBlob(ciphertext);
+		ByteBuffer decrypted = kms.decrypt(decReq1).getPlaintext();
+		String decryptedStr = new String(decrypted.array(), StandardCharsets.UTF_8);
+		System.out.println("Decrypted: " + decryptedStr);
+
+		// Attempt to tamper with the ciphertext
+		byte[] tamperedCt = ciphertext.array().clone();
+		// Flip all the bits in a byte 24 bytes from the end
+		tamperedCt[tamperedCt.length - 24] ^= 0xff;
+
+		DecryptRequest decReq2 = new DecryptRequest();
+		decReq2.setCiphertextBlob(ByteBuffer.wrap(tamperedCt));
+
+		try {
+			kms.decrypt(decReq2).getPlaintext();
+		} catch (InvalidCiphertextException ex) {
+			ex.printStackTrace();
+		}
+	}
+
 }
