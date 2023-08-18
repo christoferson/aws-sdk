@@ -99,12 +99,14 @@ public class AwsSdkS3 {
 		
 		// Block all public access
 		SetPublicAccessBlockRequest r2 = new SetPublicAccessBlockRequest();
-		r2.withBucketName(bucketname).withPublicAccessBlockConfiguration(
-				new PublicAccessBlockConfiguration()
-					.withBlockPublicAcls(true)
-					.withBlockPublicPolicy(true)
-					.withIgnorePublicAcls(true)
-					.withRestrictPublicBuckets(true));
+		
+		PublicAccessBlockConfiguration access = new PublicAccessBlockConfiguration()
+			.withBlockPublicAcls(true)
+			.withBlockPublicPolicy(true)
+			.withIgnorePublicAcls(true)
+			.withRestrictPublicBuckets(true);
+		r2.withBucketName(bucketname).withPublicAccessBlockConfiguration(access);
+		
 		SetPublicAccessBlockResult r2r = s3client.setPublicAccessBlock(r2);
 		System.out.println(r2r);
 	}
